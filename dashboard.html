@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal',sans-serif}
+        body{background:#0F172A;color:#F8FAFC;min-height:100vh;display:flex}
+        /* Sidebar */
+        .sidebar{width:240px;background:#1E293B;min-height:100vh;padding:20px 0;position:fixed;right:0;top:0;z-index:10;transition:.3s}
+        .sidebar .logo{text-align:center;padding:20px;border-bottom:1px solid #334155;margin-bottom:16px}
+        .sidebar .logo h2{color:#10B981;font-size:22px}
+        .sidebar .logo p{color:#64748B;font-size:13px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:14px 24px;color:#94A3B8;cursor:pointer;transition:.2s;border-right:3px solid transparent}
+        .nav-item:hover,.nav-item.active{background:#0F172A;color:#10B981;border-right-color:#10B981}
+        .nav-item i{width:20px;text-align:center}
+        .nav-item.logout{margin-top:auto;color:#EF4444;position:absolute;bottom:20px;width:100%}
+        .nav-item.logout:hover{background:#7F1D1D33}
+        /* Main */
+        .main{margin-right:240px;flex:1;padding:30px;min-height:100vh}
+        .page{display:none}.page.active{display:block}
+        .page-title{font-size:26px;font-weight:700;color:#F8FAFC;margin-bottom:24px;display:flex;align-items:center;gap:10px}
+        .page-title i{color:#10B981}
+        /* Cards */
+        .form-card{background:#1E293B;border-radius:20px;padding:28px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+        .form-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+        .form-group{flex:1;min-width:200px}
+        .form-group label{display:block;margin-bottom:6px;color:#94A3B8;font-size:14px;font-weight:500}
+        .form-group input,.form-group select{width:100%;padding:12px 14px;border:2px solid #334155;border-radius:12px;background:#0F172A;color:#F8FAFC;font-size:15px;outline:none;transition:.3s;font-family:'Tajawal'}
+        .form-group input:focus,.form-group select:focus{border-color:#10B981}
+        .form-group select option{background:#1E293B}
+        .btn-primary{padding:12px 32px;border:none;border-radius:12px;background:#10B981;color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:.3s;display:inline-flex;align-items:center;gap:8px}
+        .btn-primary:hover{background:#059669;transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        .btn-danger{padding:8px 16px;border:none;border-radius:8px;background:#EF4444;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+        .btn-danger:hover{background:#DC2626}
+        .btn-success{padding:8px 16px;border:none;border-radius:8px;background:#10B981;color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+        .btn-success:hover{background:#059669}
+        /* Toast */
+        .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:12px;font-weight:600;z-index:999;display:none;animation:slideDown .3s}
+        .toast.success{background:#065F46;color:#A7F3D0;display:block}
+        .toast.error{background:#7F1D1D;color:#FCA5A5;display:block}
+        @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        /* Members Table */
+        .search-bar{margin-bottom:20px}
+        .search-bar input{width:100%;padding:12px 16px;border:2px solid #334155;border-radius:12px;background:#0F172A;color:#F8FAFC;font-size:15px;outline:none}
+        .search-bar input:focus{border-color:#10B981}
+        .member-card{background:#1E293B;border-radius:16px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;transition:.2s}
+        .member-card:hover{background:#263448}
+        .member-info h4{color:#F8FAFC;margin-bottom:4px}
+        .member-info p{color:#64748B;font-size:13px}
+        .member-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+        .badge-active{background:#065F4633;color:#34D399}
+        .badge-disabled{background:#7F1D1D33;color:#F87171}
+        .badge-coach{background:#312E8133;color:#A78BFA}
+        .member-id-display{background:#0F172A;padding:6px 12px;border-radius:8px;font-size:12px;color:#64748B;font-family:monospace}
+        .stats-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+        .stat-card{flex:1;min-width:150px;background:#1E293B;padding:20px;border-radius:16px;text-align:center}
+        .stat-card .num{font-size:32px;font-weight:700;color:#10B981}
+        .stat-card .lbl{color:#64748B;font-size:14px;margin-top:4px}
+        @media(max-width:768px){.sidebar{width:60px;padding:10px 0}.sidebar .logo h2,.sidebar .logo p,.nav-item span{display:none}.nav-item{justify-content:center;padding:14px 0}.main{margin-right:60px;padding:16px}}
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="logo"><h2>⚙️ التحكم</h2><p>لوحة الإدارة</p></div>
+    <div class="nav-item active" onclick="showPage('coaches')"><i class="fas fa-user-tie"></i><span>إضافة مدرب</span></div>
+    <div class="nav-item" onclick="showPage('members')"><i class="fas fa-user-plus"></i><span>إضافة عضو</span></div>
+    <div class="nav-item" onclick="showPage('manage')"><i class="fas fa-users-cog"></i><span>إدارة الأعضاء</span></div>
+    <div class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>خروج</span></div>
+</div>
+
+<div class="main">
+    <div class="toast" id="toast"></div>
+
+    <!-- إضافة مدرب -->
+    <div class="page active" id="page-coaches">
+        <div class="page-title"><i class="fas fa-user-tie"></i> إضافة مدرب جديد</div>
+        <div class="form-card">
+            <div class="form-row">
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="coachEmail" placeholder="coach@example.com"></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="coachPass" placeholder="كلمة مرور قوية"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>اسم المدرب</label><input type="text" id="coachName" placeholder="أدخل اسم المدرب"></div>
+                <div class="form-group">
+                    <label>اللعبة</label>
+                    <select id="coachSport">
+                        <option value="">اختر اللعبة</option>
+                        <option value="chess">شطرنج ♟️</option>
+                        <option value="volleyball">طايرة 🏐</option>
+                        <option value="football">قدم ⚽</option>
+                        <option value="table_tennis">تنس طاولة 🏓</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-primary" id="addCoachBtn" onclick="addCoach()"><i class="fas fa-plus"></i> إضافة المدرب</button>
+        </div>
+        <div class="page-title" style="font-size:20px;margin-top:20px"><i class="fas fa-list"></i> المدربين الحاليين</div>
+        <div id="coachesList"></div>
+    </div>
+
+    <!-- إضافة عضو -->
+    <div class="page" id="page-members">
+        <div class="page-title"><i class="fas fa-user-plus"></i> إضافة حساب عضو جديد</div>
+        <div class="form-card">
+            <div class="form-row">
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="memEmail" placeholder="student@example.com"></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="memPass" placeholder="كلمة مرور قوية"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>كود الباركود (سكان أو يدوي)</label><input type="text" id="memBarcode" placeholder="أدخل كود الباركود أو امسحه"></div>
+            </div>
+            <p style="color:#64748B;font-size:13px;margin-bottom:16px">⚠️ تأكد أن كود الباركود مطابق للكود الموجود في بطاقة العضوية </p>
+            <button class="btn-primary" id="addMemBtn" onclick="addMember()"><i class="fas fa-plus"></i> إنشاء حساب العضو</button>
+        </div>
+    </div>
+
+    <!-- إدارة الأعضاء -->
+    <div class="page" id="page-manage">
+        <div class="page-title"><i class="fas fa-users-cog"></i> إدارة الأعضاء</div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="num" id="totalUsers">0</div><div class="lbl">إجمالي المستخدمين</div></div>
+            <div class="stat-card"><div class="num" id="activeUsers">0</div><div class="lbl">حسابات نشطة</div></div>
+            <div class="stat-card"><div class="num" id="disabledUsers">0</div><div class="lbl">حسابات معطلة</div></div>
+        </div>
+        <div class="search-bar"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو البريد..." oninput="filterMembers()"></div>
+        <div id="membersList"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+<script>
+const cfg={
+    apiKey: 'AIzaSyDlY3cXLhUTA90hm4W-ciYXFgNGGt5lLf0',
+    appId: '1:416921782729:web:b6ef2937c0f21c36930018',
+    messagingSenderId: '416921782729',
+    projectId: 'remon-c7d79',
+    authDomain: 'remon-c7d79.firebaseapp.com',
+    databaseURL: 'https://remon-c7d79-default-rtdb.firebaseio.com',
+    storageBucket: 'remon-c7d79.firebasestorage.app',
+    measurementId: 'G-CPXH58TKN3'
+};
+firebase.initializeApp(cfg);
+const secondaryApp=firebase.initializeApp(cfg,"secondary");
+const auth=firebase.auth(), db=firebase.database(), secondaryAuth=secondaryApp.auth();
+let allUsers={};
+
+// Auth guard
+auth.onAuthStateChanged(u=>{
+    if(!u){location.href='index.html';return}
+    db.ref('admins/'+u.uid).once('value',s=>{if(!s.exists()){auth.signOut();location.href='index.html'}else{loadAll()}});
+});
+
+function logout(){auth.signOut();location.href='index.html'}
+
+function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item:not(.logout)').forEach(n=>n.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function toast(msg,type='success'){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.className='toast '+type;
+    setTimeout(()=>t.className='toast',3000);
+}
+
+// ======= إضافة مدرب =======
+async function addCoach(){
+    const email=document.getElementById('coachEmail').value.trim();
+    const pass=document.getElementById('coachPass').value;
+    const name=document.getElementById('coachName').value.trim();
+    const sport=document.getElementById('coachSport').value;
+    const btn=document.getElementById('addCoachBtn');
+    if(!email||!pass||!name||!sport){toast('أكمل جميع البيانات','error');return}
+    if(pass.length<6){toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل','error');return}
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
+    try{
+        const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+        const uid=cred.user.uid;
+        await db.ref('users/'+uid).set({email:email,password:pass,isDisabled:false});
+        await db.ref('cou/'+uid).set({name:name,sport:sport,email:email});
+        await secondaryAuth.signOut();
+        toast('✅ تم إضافة المدرب بنجاح');
+        document.getElementById('coachEmail').value='';document.getElementById('coachPass').value='';
+        document.getElementById('coachName').value='';document.getElementById('coachSport').value='';
+        loadCoaches();
+    }catch(e){toast('خطأ: '+e.message,'error')}
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-plus"></i> إضافة المدرب';
+}
+
+function loadCoaches(){
+    db.ref('cou').once('value',snap=>{
+        const list=document.getElementById('coachesList');
+        list.innerHTML='';
+        const sportNames={chess:'شطرنج ♟️',volleyball:'طايرة 🏐',football:'قدم ⚽',table_tennis:'تنس طاولة 🏓'};
+        if(!snap.exists()){list.innerHTML='<p style="color:#64748B;text-align:center">لا يوجد مدربين</p>';return}
+        snap.forEach(c=>{
+            const d=c.val();
+            list.innerHTML+=`<div class="member-card"><div class="member-info"><h4>${d.name||d.email||'مدرب'}</h4><p>${d.email||''} • <span class="badge badge-coach">${sportNames[d.sport]||d.sport||'غير محدد'}</span></p></div><div class="member-actions"><button class="btn-danger" onclick="removeCoach('${c.key}')"><i class="fas fa-trash"></i></button></div></div>`;
+        });
+    });
+}
+
+async function removeCoach(uid){
+    if(!confirm('هل أنت متأكد من حذف هذا المدرب؟'))return;
+    await db.ref('cou/'+uid).remove();
+    toast('تم حذف المدرب');loadCoaches();
+}
+
+// ======= إضافة عضو =======
+async function addMember(){
+    const email=document.getElementById('memEmail').value.trim();
+    const pass=document.getElementById('memPass').value;
+    const barcode=document.getElementById('memBarcode').value.trim();
+    const btn=document.getElementById('addMemBtn');
+    if(!email||!pass||!barcode){toast('أكمل جميع البيانات','error');return}
+    if(pass.length<6){toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل','error');return}
+
+    // Check barcode exists in 
+    const memSnap=await db.ref('memco/'+barcode).once('value');
+    if(!memSnap.exists()){toast('⚠️ كود الباركود غير موجود في بيانات الأعضاء تأكد من الكود.','error');return}
+
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
+    try{
+        const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+        const uid=cred.user.uid;
+        await db.ref('users/'+uid).set({email:email,password:pass,memberId:barcode,isDisabled:false});
+        await secondaryAuth.signOut();
+        toast('✅ تم إنشاء حساب العضو وربطه بالباركود بنجاح');
+        document.getElementById('memEmail').value='';document.getElementById('memPass').value='';document.getElementById('memBarcode').value='';
+        loadMembers();
+    }catch(e){toast('خطأ: '+e.message,'error')}
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-plus"></i> إنشاء حساب العضو';
+}
+
+// ======= إدارة الأعضاء =======
+function loadMembers(){
+    db.ref('users').on('value',snap=>{
+        allUsers=snap.val()||{};
+        renderMembers(allUsers);
+        // Stats
+        let total=0,active=0,disabled=0;
+        for(const uid in allUsers){total++;if(allUsers[uid].isDisabled)disabled++;else active++}
+        document.getElementById('totalUsers').textContent=total;
+        document.getElementById('activeUsers').textContent=active;
+        document.getElementById('disabledUsers').textContent=disabled;
+    });
+}
+
+function filterMembers(){
+    const q=document.getElementById('searchInput').value.toLowerCase();
+    const filtered={};
+    for(const uid in allUsers){
+        const u=allUsers[uid];
+        if((u.email&&u.email.toLowerCase().includes(q))||(u.memberId&&u.memberId.includes(q)))filtered[uid]=u;
+    }
+    renderMembers(filtered);
+}
+
+function renderMembers(users){
+    const list=document.getElementById('membersList');
+    list.innerHTML='';
+    if(!users||!Object.keys(users).length){list.innerHTML='<p style="color:#64748B;text-align:center;padding:20px">لا يوجد أعضاء</p>';return}
+    for(const uid in users){
+        const u=users[uid];
+        const dis=u.isDisabled||false;
+        const name=u.email?u.email.split('@')[0]:'مستخدم';
+        const mid=u.memberId||'غير مرتبط';
+        list.innerHTML+=`<div class="member-card">
+            <div class="member-info">
+                <h4>${name} <span class="badge ${dis?'badge-disabled':'badge-active'}">${dis?'معطل':'نشط'}</span></h4>
+                <p>${u.email||'—'} • <span class="member-id-display">ID: ${mid}</span></p>
+            </div>
+            <div class="member-actions">
+                <button class="${dis?'btn-success':'btn-danger'}" onclick="toggleUser('${uid}',${dis})">
+                    <i class="fas fa-${dis?'unlock':'lock'}"></i> ${dis?'تفعيل':'تعطيل'}
+                </button>
+                <button class="btn-danger" onclick="clearDevice('${uid}')" title="مسح الجهاز"><i class="fas fa-mobile-alt"></i></button>
+            </div>
+        </div>`;
+    }
+}
+
+async function toggleUser(uid,currentlyDisabled){
+    const newState=!currentlyDisabled;
+    await db.ref('users/'+uid+'/isDisabled').set(newState);
+    toast(newState?'تم تعطيل الحساب فوراً ⛔':'تم تفعيل الحساب ✅');
+}
+
+async function clearDevice(uid){
+    if(!confirm('هل تريد مسح معرف الجهاز؟ سيسمح للعضو بتسجيل الدخول من جهاز جديد.'))return;
+    await db.ref('users/'+uid+'/deviceId').remove();
+    toast('تم مسح معرف الجهاز');
+}
+
+function loadAll(){loadCoaches();loadMembers()}
+</script>
+</body>
+</html>

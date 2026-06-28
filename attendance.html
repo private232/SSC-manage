@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة سجلات الحضور والغياب | ريمون</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            --glass-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            padding-bottom: 50px;
+        }
+
+        /* Ambient Glow Lights */
+        .ambient-glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .ambient-glow-2 {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.04) 0%, transparent 70%);
+            bottom: 10%;
+            right: -150px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Helper Classes */
+        .d-none { display: none !important; }
+        .d-block { display: block !important; }
+        .d-flex { display: flex !important; }
+
+        /* --- LOGIN SCREEN --- */
+        .login-wrapper {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            padding: 40px 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), #3b82f6);
+        }
+
+        .login-logo {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+            animation: pulse 2s infinite;
+        }
+
+        .login-card h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(to left, #f8fafc, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 48px 14px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-group input:focus + i {
+            color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            animation: shake 0.3s ease;
+        }
+
+        /* --- DASHBOARD HEADER --- */
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            padding: 16px 24px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 800;
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        .user-info h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .user-info span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 2px;
+            display: inline-block;
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            padding: 10px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 8px 20px var(--danger-glow);
+        }
+
+        /* --- FILTERS SECTION --- */
+        .filters-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.6s ease 0.1s both;
+        }
+
+        .datetime-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .date-picker-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .date-picker-wrapper label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .date-input-container {
+            position: relative;
+        }
+
+        .date-input-container input {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 42px 12px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .date-input-container input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .date-input-container i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .day-badge {
+            background: var(--primary-glow);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--primary);
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 48px;
+            margin-top: 26px; /* align with input */
+        }
+
+        /* Tabs for Stages */
+        .stage-tabs-wrapper {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 16px;
+        }
+
+        .stage-tabs-title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .tabs-list {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: none;
+        }
+
+        .tabs-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-item {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .tab-item:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-item.active {
+            background: var(--primary-glow);
+            color: var(--primary);
+            border-color: rgba(16, 185, 129, 0.25);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+        }
+
+        .tab-item.locked {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* --- STATS GRID --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: var(--transition);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.total { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .stat-icon.present { background: linear-gradient(135deg, #10b981, #047857); }
+        .stat-icon.absent { background: linear-gradient(135deg, #f43f5e, #be123c); }
+        .stat-icon.rate { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        .stat-details h4 {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-details .value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.1;
+        }
+
+        .stat-details .percent {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: 4px;
+            font-weight: 600;
+        }
+
+        /* --- MAIN CONTENT CARD --- */
+        .content-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 15px 35px -15px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.6s ease 0.3s both;
+        }
+
+        /* Search and Quick Filters bar */
+        .search-filters-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 12px 42px 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus + .search-icon {
+            color: var(--primary);
+        }
+
+        .quick-filters {
+            display: flex;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 2px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Table & Lists */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        .attendance-table th {
+            padding: 16px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .attendance-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        .attendance-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .attendance-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* Student profile info inside row */
+        .student-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .student-letter-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .student-details-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-name-val {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .student-id-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Status Badge Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .status-pill.present {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--primary);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .status-pill.absent {
+            background: rgba(244, 63, 94, 0.1);
+            color: var(--danger);
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+
+        /* Action Buttons */
+        .action-cell {
+            text-align: left;
+        }
+
+        .btn-action {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .btn-action.btn-mark-present {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: var(--primary);
+        }
+
+        .btn-action.btn-mark-present:hover {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn-action.btn-mark-absent {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .btn-action.btn-mark-absent:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 4px 12px var(--danger-glow);
+        }
+
+        /* --- MOBILE LAYOUT (CARD VIEW) --- */
+        .mobile-cards-list {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-card {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition);
+        }
+
+        .mobile-card:active {
+            transform: scale(0.98);
+        }
+
+        .mobile-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mobile-card-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+        }
+
+        .mobile-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mobile-info-item span:first-child {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .mobile-info-item span:last-child {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .mobile-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .mobile-card-actions .btn-action {
+            width: 100%;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        /* Shimmer Loader */
+        .shimmer-row {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .shimmer-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(16, 185, 129, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+            margin: 0 auto 12px auto;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Toast notifications */
+        .toast-notify {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast-notify.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-notify.success {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
+        }
+
+        .toast-notify.error {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: linear-gradient(135deg, #0f172a 0%, #7f1d1d 100%);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.15)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.3)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.15)); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .dash-header {
+                padding: 12px 16px;
+                border-radius: 16px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .user-info h3 {
+                font-size: 0.95rem;
+            }
+
+            .btn-logout span {
+                display: none;
+            }
+
+            .btn-logout {
+                padding: 8px 12px;
+            }
+
+            .datetime-picker-row {
+                gap: 12px;
+            }
+
+            .date-picker-wrapper {
+                min-width: 100%;
+            }
+
+            .day-badge {
+                margin-top: 0;
+                width: 100%;
+                justify-content: center;
+                height: 46px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 12px;
+                gap: 10px;
+                border-radius: 16px;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+                border-radius: 10px;
+            }
+
+            .stat-details .value {
+                font-size: 1.4rem;
+            }
+
+            .stat-details h4 {
+                font-size: 0.75rem;
+            }
+
+            .content-card {
+                padding: 16px;
+                border-radius: 20px;
+            }
+
+            .search-filters-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .search-wrapper {
+                min-width: 100%;
+            }
+
+            .quick-filters {
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            /* Responsive view toggle */
+            .table-responsive {
+                display: none;
+            }
+
+            .mobile-cards-list {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient glowing backgrounds -->
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="container">
+        <!-- Toast Notification Element -->
+        <div class="toast-notify" id="toastNotify">
+            <i class="fa-solid fa-circle-info" id="toastIcon"></i>
+            <span id="toastMsg">رسالة التنبيه تظهر هنا</span>
+        </div>
+
+        <!-- ==================== 1. LOGIN SCREEN ==================== -->
+        <div class="login-wrapper" id="loginScreen">
+            <div class="login-card">
+                <i class="fa-solid fa-lock login-logo"></i>
+                <h2>لوحة تسجيل الدخول</h2>
+                <p>الرجاء إدخال بيانات الأدمن أو المدرب للمتابعة</p>
+
+                <div class="input-group">
+                    <label for="emailInput">البريد الإلكتروني</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="emailInput" placeholder="admin@example.com" autocomplete="email">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="passInput">كلمة المرور</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="passInput" placeholder="••••••••" autocomplete="current-password">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                </div>
+
+                <button class="btn-submit" id="submitLoginBtn" onclick="handleLogin()">
+                    <span>دخول</span>
+                    <i class="fa-solid fa-sign-in-alt"></i>
+                </button>
+
+                <div class="login-error" id="loginError">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="loginErrorText">بيانات الدخول غير صحيحة</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 2. DASHBOARD MAIN ==================== -->
+        <div class="dashboard-wrapper d-none" id="dashboardScreen">
+            <!-- Header -->
+            <header class="dash-header">
+                <div class="user-profile">
+                    <div class="user-avatar" id="avatarLetter">أ</div>
+                    <div class="user-info">
+                        <h3 id="userNameDisplay">جاري التحميل...</h3>
+                        <span id="userRoleBadge">مدير النظام</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="dashboard.html" id="backToDashBtn" class="btn-logout" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--primary); text-decoration: none; display: none;">
+                        <span>لوحة التحكم</span>
+                        <i class="fa-solid fa-gauge"></i>
+                    </a>
+                    <button class="btn-logout" onclick="handleLogout()">
+                        <span>خروج</span>
+                        <i class="fa-solid fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Filters -->
+            <section class="filters-card">
+                <div class="datetime-picker-row">
+                    <div class="date-picker-wrapper">
+                        <label for="dateSelect">تاريخ اليوم</label>
+                        <div class="date-input-container">
+                            <input type="date" id="dateSelect" onchange="onDateOrStageChange()">
+                            <i class="fa-solid fa-calendar-days"></i>
+                        </div>
+                    </div>
+                    <div class="day-badge" id="dayNameBadge">
+                        <i class="fa-solid fa-calendar-day"></i>
+                        <span id="dayNameText">اليوم</span>
+                    </div>
+                </div>
+
+                <div class="stage-tabs-wrapper">
+                    <div class="stage-tabs-title">المرحلة الرياضية</div>
+                    <div class="tabs-list" id="stagesListContainer">
+                        <div class="tab-item active" data-stage="الكل" onclick="changeStage('الكل')">⚽ الكل</div>
+                        <div class="tab-item" data-stage="قدم" onclick="changeStage('قدم')">⚽ قدم</div>
+                        <div class="tab-item" data-stage="شطرنج" onclick="changeStage('شطرنج')">♟️ شطرنج</div>
+                        <div class="tab-item" data-stage="طايرة" onclick="changeStage('طايرة')">🏐 طايرة</div>
+                        <div class="tab-item" data-stage="تنس طاولة" onclick="changeStage('تنس طاولة')">🏓 تنس طاولة</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon total"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-details">
+                        <h4>إجمالي المشتركين</h4>
+                        <div class="value" id="statTotal">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon present"><i class="fa-solid fa-user-check"></i></div>
+                    <div class="stat-details">
+                        <h4>الحاضرين</h4>
+                        <div>
+                            <span class="value" id="statPresent">0</span>
+                            <span class="percent" id="statPresentPercent">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon absent"><i class="fa-solid fa-user-xmark"></i></div>
+                    <div class="stat-details">
+                        <h4>الغائبين</h4>
+                        <div>
+                            <span class="value" id="statAbsent">0</span>
+                            <span class="percent" id="statAbsentPercent">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon rate"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="stat-details">
+                        <h4>نسبة الحضور</h4>
+                        <div class="value" id="statRate">0%</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Records Display -->
+            <section class="content-card">
+                <!-- Search & Status filter -->
+                <div class="search-filters-row">
+                    <div class="search-wrapper">
+                        <input type="text" class="search-input" id="searchStudentInput" placeholder="البحث بالاسم أو الكود..." oninput="onSearchOrStatusFilterChange()">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    </div>
+                    <div class="quick-filters">
+                        <button class="filter-btn active" id="filterBtnAll" onclick="changeStatusFilter('all')">الكل</button>
+                        <button class="filter-btn" id="filterBtnPresent" onclick="changeStatusFilter('present')">الحاضرين</button>
+                        <button class="filter-btn" id="filterBtnAbsent" onclick="changeStatusFilter('absent')">الغائبين</button>
+                    </div>
+                </div>
+
+                <!-- Table View (Desktop) -->
+                <div class="table-responsive" id="desktopTableContainer">
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>اسم العضو</th>
+                                <th>كود الباركود</th>
+                                <th>اللعبة / المرحلة</th>
+                                <th>حالة الحضور</th>
+                                <th>وقت الحضور</th>
+                                <th class="action-cell">تحكم يدوي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceTableBody">
+                            <!-- Rows dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Card View (Mobile) -->
+                <div class="mobile-cards-list" id="mobileCardsContainer">
+                    <!-- Cards dynamically populated -->
+                </div>
+
+                <!-- Spinner Loader -->
+                <div class="shimmer-row d-none" id="dashboardLoader">
+                    <div class="shimmer-spinner"></div>
+                    <p>جاري مزامنة السجلات...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state d-none" id="emptyStateContainer">
+                    <i class="fa-solid fa-users-slash"></i>
+                    <h3>لا توجد بيانات للعرض</h3>
+                    <p>يرجى اختيار تاريخ أو لعبة أخرى، أو التأكد من إدخال الطلاب.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <script>
+        // ==========================================
+        // Firebase Config
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: 'AIzaSyDlY3cXLhUTA90hm4W-ciYXFgNGGt5lLf0',
+            appId: '1:416921782729:web:b6ef2937c0f21c36930018',
+            messagingSenderId: '416921782729',
+            projectId: 'remon-c7d79',
+            authDomain: 'remon-c7d79.firebaseapp.com',
+            databaseURL: 'https://remon-c7d79-default-rtdb.firebaseio.com',
+            storageBucket: 'remon-c7d79.firebasestorage.app',
+            measurementId: 'G-CPXH58TKN3',
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Application State
+        let currentUser = null;
+        let userRole = 'unknown'; // 'admin', 'coach'
+        let coachSportKey = ''; // mapped key e.g. 'football'
+        let coachSportName = ''; // mapped name in memco e.g. 'قدم'
+
+        let membersData = {}; // Cache of all members
+        let attendanceData = {}; // Cache of current selected stage/date records
+        let currentStage = 'الكل';
+        let selectedDate = '';
+        let searchKeyword = '';
+        let statusFilter = 'all'; // 'all', 'present', 'absent'
+
+        // DOM elements
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboardScreen = document.getElementById('dashboardScreen');
+        const emailInput = document.getElementById('emailInput');
+        const passInput = document.getElementById('passInput');
+        const loginError = document.getElementById('loginError');
+        const loginErrorText = document.getElementById('loginErrorText');
+        const submitLoginBtn = document.getElementById('submitLoginBtn');
+
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const userRoleBadge = document.getElementById('userRoleBadge');
+        const avatarLetter = document.getElementById('avatarLetter');
+
+        const dateSelect = document.getElementById('dateSelect');
+        const dayNameText = document.getElementById('dayNameText');
+        const stagesListContainer = document.getElementById('stagesListContainer');
+
+        const statTotal = document.getElementById('statTotal');
+        const statPresent = document.getElementById('statPresent');
+        const statPresentPercent = document.getElementById('statPresentPercent');
+        const statAbsent = document.getElementById('statAbsent');
+        const statAbsentPercent = document.getElementById('statAbsentPercent');
+        const statRate = document.getElementById('statRate');
+
+        const searchStudentInput = document.getElementById('searchStudentInput');
+        const attendanceTableBody = document.getElementById('attendanceTableBody');
+        const mobileCardsContainer = document.getElementById('mobileCardsContainer');
+        const dashboardLoader = document.getElementById('dashboardLoader');
+        const emptyStateContainer = document.getElementById('emptyStateContainer');
+        
+        const toastNotify = document.getElementById('toastNotify');
+        const toastMsg = document.getElementById('toastMsg');
+        const toastIcon = document.getElementById('toastIcon');
+
+        // Sports Map for translation and constraints
+        const sportNamesMap = {
+            'chess': 'شطرنج',
+            'volleyball': 'طايرة',
+            'football': 'قدم',
+            'table_tennis': 'تنس طاولة'
+        };
+
+        const sportEmojiMap = {
+            'الكل': '⚽',
+            'قدم': '⚽',
+            'شطرنج': '♟️',
+            'طايرة': '🏐',
+            'تنس طاولة': '🏓'
+        };
+
+        // Initialize dates and check auth
+        window.addEventListener('DOMContentLoaded', () => {
+            // Setup default date picker to local date today
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            selectedDate = `${year}-${month}-${day}`;
+            dateSelect.value = selectedDate;
+            updateDayLabel(selectedDate);
+
+            // Bind enter key on login fields
+            passInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+
+            // Listen to auth changes
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    verifyUserRole(user);
+                } else {
+                    showLoginScreen();
+                }
+            });
+        });
+
+        // Show/Hide Screens
+        function showLoginScreen() {
+            loginScreen.classList.remove('d-none');
+            dashboardScreen.classList.add('d-none');
+            loginError.style.display = 'none';
+            submitLoginBtn.disabled = false;
+            submitLoginBtn.querySelector('span').innerText = 'دخول';
+        }
+
+        function showDashboardScreen() {
+            loginScreen.classList.add('d-none');
+            dashboardScreen.classList.remove('d-none');
+        }
+
+        // Notify user toast function
+        function notify(msg, type = 'success') {
+            toastMsg.innerText = msg;
+            toastNotify.className = `toast-notify show ${type}`;
+            toastIcon.className = type === 'success' 
+                ? 'fa-solid fa-circle-check' 
+                : 'fa-solid fa-circle-exclamation';
+
+            setTimeout(() => {
+                toastNotify.classList.remove('show');
+            }, 3000);
+        }
+
+        // Verify role and permissions
+        async function verifyUserRole(user) {
+            try {
+                // 1. Check if Admin
+                const adminSnap = await db.ref('admins/' + user.uid).once('value');
+                if (adminSnap.exists()) {
+                    currentUser = user;
+                    userRole = 'admin';
+                    userNameDisplay.innerText = adminSnap.val().name || 'المشرف العام';
+                    userRoleBadge.innerText = 'مدير النظام';
+                    userRoleBadge.style.color = '#3b82f6';
+                    avatarLetter.innerText = (adminSnap.val().name || 'أ').charAt(0);
+                    
+                    document.getElementById('backToDashBtn').style.display = 'flex';
+                    setupStageTabs();
+                    showDashboardScreen();
+                    await loadData();
+                    return;
+                }
+
+                // 2. Check if Coach
+                const coachSnap = await db.ref('cou/' + user.uid).once('value');
+                if (coachSnap.exists()) {
+                    currentUser = user;
+                    userRole = 'coach';
+                    const coachData = coachSnap.val();
+                    coachSportKey = coachData.sport || '';
+                    coachSportName = sportNamesMap[coachSportKey] || coachSportKey;
+
+                    userNameDisplay.innerText = coachData.name || 'المدرب';
+                    userRoleBadge.innerText = `مدرب (${coachSportName})`;
+                    userRoleBadge.style.color = '#f59e0b';
+                    avatarLetter.innerText = (coachData.name || 'م').charAt(0);
+                    
+                    currentStage = coachSportName;
+                    setupStageTabs();
+                    showDashboardScreen();
+                    await loadData();
+                    return;
+                }
+
+                // 3. Unauthorized user
+                loginErrorText.innerText = 'هذا الحساب ليس أدمن أو مدرب مصرح له بالدخول';
+                loginError.style.display = 'flex';
+                auth.signOut();
+                showLoginScreen();
+
+            } catch (err) {
+                console.error("Error verifying credentials:", err);
+                loginErrorText.innerText = 'حدث خطأ أثناء التحقق من الصلاحيات';
+                loginError.style.display = 'flex';
+                auth.signOut();
+                showLoginScreen();
+            }
+        }
+
+        // Login Handler
+        async function handleLogin() {
+            const email = emailInput.value.trim();
+            const pass = passInput.value;
+
+            if (!email || !pass) {
+                loginErrorText.innerText = 'أدخل البريد الإلكتروني وكلمة المرور';
+                loginError.style.display = 'flex';
+                return;
+            }
+
+            submitLoginBtn.disabled = true;
+            submitLoginBtn.querySelector('span').innerText = 'جاري التحقق...';
+            loginError.style.display = 'none';
+
+            try {
+                await auth.signInWithEmailAndPassword(email, pass);
+                // Auth change listener will trigger verifyUserRole automatically
+            } catch (err) {
+                console.error("Login failed:", err);
+                loginErrorText.innerText = 'بيانات الدخول غير صحيحة أو الحساب غير نشط';
+                loginError.style.display = 'flex';
+                submitLoginBtn.disabled = false;
+                submitLoginBtn.querySelector('span').innerText = 'دخول';
+            }
+        }
+
+        // Logout Handler
+        function handleLogout() {
+            auth.signOut().then(() => {
+                currentUser = null;
+                userRole = 'unknown';
+                membersData = {};
+                attendanceData = {};
+                notify('تم تسجيل الخروج بنجاح');
+                showLoginScreen();
+            });
+        }
+
+        // Setup Stage selectors depending on role
+        function setupStageTabs() {
+            let html = '';
+            if (userRole === 'admin') {
+                const stages = ['الكل', 'قدم', 'شطرنج', 'طايرة', 'تنس طاولة'];
+                stages.forEach(st => {
+                    const activeClass = currentStage === st ? 'active' : '';
+                    const emoji = sportEmojiMap[st] || '⚽';
+                    html += `<div class="tab-item ${activeClass}" data-stage="${st}" onclick="changeStage('${st}')">${emoji} ${st}</div>`;
+                });
+            } else if (userRole === 'coach') {
+                // Locked choice for Coach
+                const emoji = sportEmojiMap[coachSportName] || '⚽';
+                html += `<div class="tab-item active locked" data-stage="${coachSportName}">${emoji} ${coachSportName} (رياضتك)</div>`;
+            }
+            stagesListContainer.innerHTML = html;
+        }
+
+        // Date selection changes
+        function updateDayLabel(dateStr) {
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return;
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const date = new Date(year, month, day);
+            const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            dayNameText.innerText = days[date.getDay()];
+        }
+
+        // Change filters
+        async function changeStage(st) {
+            if (userRole === 'coach') return; // Cannot change
+            currentStage = st;
+            const tabs = stagesListContainer.querySelectorAll('.tab-item');
+            tabs.forEach(t => {
+                if (t.getAttribute('data-stage') === st) t.classList.add('active');
+                else t.classList.remove('active');
+            });
+            await loadData();
+        }
+
+        async function onDateOrStageChange() {
+            selectedDate = dateSelect.value;
+            updateDayLabel(selectedDate);
+            await loadData();
+        }
+
+        // Real-time listener loader
+        let attendanceRef = null;
+        let membersRef = null;
+
+        async function loadData() {
+            // Show loaders
+            dashboardLoader.classList.remove('d-none');
+            attendanceTableBody.innerHTML = '';
+            mobileCardsContainer.innerHTML = '';
+            emptyStateContainer.classList.add('d-none');
+
+            try {
+                // 1. Fetch Members list (one-off read or keep cached, but to get real-time info, do it once per request)
+                if (Object.keys(membersData).length === 0) {
+                    const memSnap = await db.ref('memco').once('value');
+                    membersData = memSnap.val() || {};
+                }
+
+                // 2. Clear old references
+                if (attendanceRef) {
+                    attendanceRef.off();
+                }
+
+                // Determine stages to query
+                // Path is سجلات/{stage}/{date}
+                // If currentStage is 'الكل', we need to fetch all stages for the selected date
+                const stagesToFetch = currentStage === 'الكل' 
+                    ? ['شطرنج', 'طايرة', 'قدم', 'تنس طاولة', 'الكل'] 
+                    : [currentStage];
+
+                attendanceData = {};
+                let loadedCount = 0;
+
+                // Simple mechanism to compile records from all queries
+                const compileResults = () => {
+                    processAndRender();
+                    dashboardLoader.classList.add('d-none');
+                };
+
+                stagesToFetch.forEach(stage => {
+                    db.ref(`سجلات/${stage}/${selectedDate}`).on('value', (snap) => {
+                        const val = snap.val() || {};
+                        // Merge records
+                        Object.assign(attendanceData, val);
+                        
+                        loadedCount++;
+                        if (loadedCount >= stagesToFetch.length) {
+                            compileResults();
+                        }
+                    }, (err) => {
+                        console.error("Error reading attendance:", err);
+                        loadedCount++;
+                        if (loadedCount >= stagesToFetch.length) {
+                            compileResults();
+                        }
+                    });
+                });
+
+            } catch (err) {
+                console.error("Error loading workspace data:", err);
+                notify('خطأ أثناء تحميل البيانات', 'error');
+                dashboardLoader.classList.add('d-none');
+            }
+        }
+
+        // Process data filter & statistics calculation
+        let compiledStudentsList = [];
+
+        function processAndRender() {
+            compiledStudentsList = [];
+
+            // Filter members that match the selected Stage
+            Object.keys(membersData).forEach(id => {
+                const member = membersData[id];
+                const studentName = (member.name || '').trim();
+                
+                // Skip members with no name or placeholder
+                if (!studentName || studentName === 'لا يوجد اسم') {
+                    return;
+                }
+
+                const studentStage = member.stage || 'غير معروف';
+
+                // Check stage criteria
+                let isMatch = false;
+                if (currentStage === 'الكل') {
+                    isMatch = true;
+                } else if (studentStage === currentStage || studentStage === 'الكل') {
+                    isMatch = true;
+                }
+
+                if (isMatch) {
+                    // Check if present
+                    const isPresent = attendanceData.hasOwnProperty(id);
+                    const attendRecord = isPresent ? attendanceData[id] : null;
+                    
+                    let attendTime = '—';
+                    if (isPresent && attendRecord) {
+                        const ts = attendRecord.timestamp;
+                        if (ts) {
+                            const dateObj = new Date(ts);
+                            attendTime = formatTimeArabic(dateObj);
+                        }
+                    }
+
+                    compiledStudentsList.push({
+                        id: id,
+                        name: member.name || 'لا يوجد اسم',
+                        stage: studentStage,
+                        isPresent: isPresent,
+                        attendTime: attendTime,
+                        phone: member.phone || '',
+                        email: member.email || ''
+                    });
+                }
+            });
+
+            // Sort alphabetically by name
+            compiledStudentsList.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+
+            // Calculate Statistics
+            const total = compiledStudentsList.length;
+            const present = compiledStudentsList.filter(s => s.isPresent).length;
+            const absent = total - present;
+            const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+
+            // Update stats labels
+            statTotal.innerText = total;
+            statPresent.innerText = present;
+            statPresentPercent.innerText = total > 0 ? `(${Math.round((present/total)*100)}%)` : '(0%)';
+            statAbsent.innerText = absent;
+            statAbsentPercent.innerText = total > 0 ? `(${Math.round((absent/total)*100)}%)` : '(0%)';
+            statRate.innerText = `${rate}%`;
+
+            renderList();
+        }
+
+        // Render functions
+        function renderList() {
+            attendanceTableBody.innerHTML = '';
+            mobileCardsContainer.innerHTML = '';
+
+            // Apply Search Query & Quick Filters
+            const query = searchKeyword.toLowerCase().trim();
+            
+            const filteredList = compiledStudentsList.filter(s => {
+                // Name or ID match
+                const matchesSearch = s.name.toLowerCase().includes(query) || s.id.toLowerCase().includes(query);
+                
+                // Status match
+                let matchesStatus = true;
+                if (statusFilter === 'present') matchesStatus = s.isPresent;
+                else if (statusFilter === 'absent') matchesStatus = !s.isPresent;
+
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filteredList.length === 0) {
+                emptyStateContainer.classList.remove('d-none');
+                return;
+            }
+
+            emptyStateContainer.classList.add('d-none');
+
+            // Generate Colors for letter avatars to look super premium
+            const avatarColors = [
+                'linear-gradient(135deg, #10b981 0%, #047857 100%)', // Emerald
+                'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', // Blue
+                'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)', // Purple
+                'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // Pink
+                'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', // Amber
+                'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'  // Cyan
+            ];
+
+            filteredList.forEach(student => {
+                // Get avatar color index based on first letter charcode
+                const charCode = student.name.charCodeAt(0) || 0;
+                const color = avatarColors[charCode % avatarColors.length];
+                const initial = student.name.charAt(0);
+
+                // Desktop row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="student-meta">
+                            <div class="student-letter-avatar" style="background: ${color}">${initial}</div>
+                            <div class="student-details-col">
+                                <span class="student-name-val">${student.name}</span>
+                                ${student.phone ? `<span class="student-id-val"><i class="fa-solid fa-phone" style="font-size:0.7rem;margin-left:4px"></i>${student.phone}</span>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td><span style="font-family:'Outfit';font-weight:600">${student.id}</span></td>
+                    <td><span class="status-pill present" style="background:rgba(255,255,255,0.05);color:var(--text-muted);border-color:transparent">${student.stage}</span></td>
+                    <td>
+                        <span class="status-pill ${student.isPresent ? 'present' : 'absent'}">
+                            <i class="fa-solid ${student.isPresent ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                            ${student.isPresent ? 'حاضر' : 'غائب'}
+                        </span>
+                    </td>
+                    <td><span style="font-family:'Outfit';font-weight:600;color:${student.isPresent ? 'var(--primary)' : 'var(--text-muted)'}">${student.attendTime}</span></td>
+                    <td class="action-cell">
+                        ${student.isPresent 
+                            ? `<button class="btn-action btn-mark-absent" onclick="toggleAttendance('${student.id}', '${student.name}', '${student.stage}', true)">
+                                    <i class="fa-solid fa-user-minus"></i>
+                                    <span>إلغاء التحضير</span>
+                               </button>`
+                            : `<button class="btn-action btn-mark-present" onclick="toggleAttendance('${student.id}', '${student.name}', '${student.stage}', false)">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                    <span>تسجيل حضور</span>
+                               </button>`
+                        }
+                    </td>
+                `;
+                attendanceTableBody.appendChild(tr);
+
+                // Mobile Card layout
+                const card = document.createElement('div');
+                card.className = 'mobile-card';
+                card.innerHTML = `
+                    <div class="mobile-card-header">
+                        <div class="student-meta">
+                            <div class="student-letter-avatar" style="background: ${color}">${initial}</div>
+                            <div class="student-details-col">
+                                <span class="student-name-val">${student.name}</span>
+                                <span class="student-id-val">كود: ${student.id}</span>
+                            </div>
+                        </div>
+                        <span class="status-pill ${student.isPresent ? 'present' : 'absent'}">
+                            <i class="fa-solid ${student.isPresent ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+                            ${student.isPresent ? 'حاضر' : 'غائب'}
+                        </span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-info-item">
+                            <span>اللعبة / المرحلة</span>
+                            <span>${student.stage}</span>
+                        </div>
+                        <div class="mobile-info-item">
+                            <span>وقت الحضور</span>
+                            <span style="color:${student.isPresent ? 'var(--primary)' : 'var(--text-muted)'}">${student.attendTime}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-actions">
+                        ${student.isPresent 
+                            ? `<button class="btn-action btn-mark-absent" onclick="toggleAttendance('${student.id}', '${student.name}', '${student.stage}', true)">
+                                    <i class="fa-solid fa-user-minus"></i>
+                                    <span>إلغاء الحضور</span>
+                               </button>`
+                            : `<button class="btn-action btn-mark-present" onclick="toggleAttendance('${student.id}', '${student.name}', '${student.stage}', false)">
+                                    <i class="fa-solid fa-user-plus"></i>
+                                    <span>تسجيل حضور يدوي</span>
+                               </button>`
+                        }
+                    </div>
+                `;
+                mobileCardsContainer.appendChild(card);
+            });
+        }
+
+        // Toggle Attendance status in database
+        async function toggleAttendance(studentId, name, stage, isPresentCurrently) {
+            // Determine student stage for database path.
+            // If the student stage is 'الكل', we use the active stage filter (or default to 'الكل')
+            let dbStage = stage;
+            if (!dbStage || dbStage === 'غير معروف') {
+                dbStage = 'الكل';
+            }
+
+            const path = `سجلات/${dbStage}/${selectedDate}/${studentId}`;
+            const dayName = dayNameText.innerText;
+
+            try {
+                if (isPresentCurrently) {
+                    // Mark as absent (Remove record)
+                    if (confirm(`هل تريد إلغاء حضور اللاعب "${name}"؟`)) {
+                        await db.ref(path).remove();
+                        notify(`تم إلغاء حضور "${name}" بنجاح`, 'success');
+                    }
+                } else {
+                    // Mark as present (Add record)
+                    const record = {
+                        name: name,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        day: dayName
+                    };
+                    await db.ref(path).set(record);
+                    notify(`تم تسجيل حضور "${name}" بنجاح`, 'success');
+                }
+            } catch (err) {
+                console.error("Error updating database record:", err);
+                notify('خطأ أثناء تحديث حالة الحضور في قاعدة البيانات', 'error');
+            }
+        }
+
+        // Filter events
+        function onSearchOrStatusFilterChange() {
+            searchKeyword = searchStudentInput.value;
+            renderList();
+        }
+
+        function changeStatusFilter(status) {
+            statusFilter = status;
+            
+            // Update active states
+            const buttons = ['filterBtnAll', 'filterBtnPresent', 'filterBtnAbsent'];
+            buttons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.classList.remove('active');
+            });
+
+            if (status === 'all') document.getElementById('filterBtnAll').classList.add('active');
+            else if (status === 'present') document.getElementById('filterBtnPresent').classList.add('active');
+            else if (status === 'absent') document.getElementById('filterBtnAbsent').classList.add('active');
+
+            renderList();
+        }
+
+        // Helper time formatter
+        function formatTimeArabic(dateObj) {
+            let hours = dateObj.getHours();
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // 0 should be 12
+            return `${hours}:${minutes} ${ampm}`;
+        }
+    </script>
+</body>
+
+</html>

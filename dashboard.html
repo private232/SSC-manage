@@ -71,6 +71,7 @@
     <div class="nav-item active" onclick="showPage('coaches')"><i class="fas fa-user-tie"></i><span>إضافة مدرب</span></div>
     <div class="nav-item" onclick="showPage('members')"><i class="fas fa-user-plus"></i><span>إضافة عضو</span></div>
     <div class="nav-item" onclick="showPage('manage')"><i class="fas fa-users-cog"></i><span>إدارة الأعضاء</span></div>
+    <div class="nav-item" onclick="location.href='attendance.html'"><i class="fas fa-calendar-check"></i><span>سجلات الحضور</span></div>
     <div class="nav-item logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i><span>خروج</span></div>
 </div>
 
@@ -225,31 +226,100 @@ async function addMember(){
     if(!email||!pass||!barcode){toast('أكمل جميع البيانات','error');return}
     if(pass.length<6){toast('كلمة المرور يجب أن تكون 6 أحرف على الأقل','error');return}
 
-    // Check barcode exists in 
-    const memSnap=await db.ref('memco/'+barcode).once('value');
-    if(!memSnap.exists()){toast('⚠️ كود الباركود غير موجود في بيانات الأعضاء تأكد من الكود.','error');return}
+    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري التحقق من الباركود...';
+    try {
+        // Check barcode exists in valid_barcodes (flat, very light, instant search)
+        const memSnap=await db.ref('valid_barcodes/'+barcode).once('value');
+        if(!memSnap.exists()){
+            toast('⚠️ كود الباركود غير موجود في بيانات الأعضاء تأكد من الكود.','error');
+            btn.disabled=false;btn.innerHTML='<i class="fas fa-plus"></i> إنشاء حساب العضو';
+            return;
+        }
 
-    btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
-    try{
+        btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
         const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
         const uid=cred.user.uid;
+        
+        // 1. Save user details in users node
         await db.ref('users/'+uid).set({email:email,password:pass,memberId:barcode,isDisabled:false});
+        
+        // 2. Populate basic details in memco so they show up on Mobile App immediately
+        const defaultName=email.split('@')[0];
+        const memcoRef = db.ref('memco/'+barcode);
+        const memcoSnap = await memcoRef.once('value');
+        
+        // If memco node is empty string or doesn't have an object, write basic details
+        if (!memcoSnap.exists() || typeof memcoSnap.val() !== 'object' || memcoSnap.val() === null) {
+            await memcoRef.set({
+                name: defaultName,
+                email: email,
+                stage: 'الكل',
+                scannedCode: barcode,
+                phone: ''
+            });
+        } else {
+            // Just update it if it exists but is missing name/email
+            await memcoRef.update({
+                email: email,
+                scannedCode: barcode
+            });
+            const currentData = memcoSnap.val();
+            if (!currentData.name) {
+                await memcoRef.update({ name: defaultName });
+            }
+            if (!currentData.stage) {
+                await memcoRef.update({ stage: 'الكل' });
+            }
+        }
+
         await secondaryAuth.signOut();
         toast('✅ تم إنشاء حساب العضو وربطه بالباركود بنجاح');
         document.getElementById('memEmail').value='';document.getElementById('memPass').value='';document.getElementById('memBarcode').value='';
         loadMembers();
-    }catch(e){toast('خطأ: '+e.message,'error')}
+    } catch(e) {
+        toast('خطأ: '+e.message,'error');
+    }
     btn.disabled=false;btn.innerHTML='<i class="fas fa-plus"></i> إنشاء حساب العضو';
 }
 
 // ======= إدارة الأعضاء =======
 function loadMembers(){
-    db.ref('users').on('value',snap=>{
+    db.ref('users').on('value',async snap=>{
         allUsers=snap.val()||{};
         renderMembers(allUsers);
         // Stats
         let total=0,active=0,disabled=0;
-        for(const uid in allUsers){total++;if(allUsers[uid].isDisabled)disabled++;else active++}
+        for(const uid in allUsers){
+            total++;
+            if(allUsers[uid].isDisabled) {
+                disabled++;
+            } else {
+                active++;
+            }
+            
+            // Auto-repair empty/missing memco data for registered users in background
+            const u = allUsers[uid];
+            if (u.memberId && u.email) {
+                const barcode = u.memberId;
+                try {
+                    const memcoRef = db.ref('memco/' + barcode);
+                    const memcoSnap = await memcoRef.once('value');
+                    if (!memcoSnap.exists() || typeof memcoSnap.val() !== 'object' || memcoSnap.val() === null) {
+                        const defaultName = u.email.split('@')[0];
+                        await memcoRef.set({
+                            name: defaultName,
+                            email: u.email,
+                            stage: 'الكل',
+                            scannedCode: barcode,
+                            phone: ''
+                        });
+                        console.log('Successfully repaired empty member record for:', barcode);
+                    }
+                } catch(e) {
+                    console.error('Error repairing memco for ' + barcode + ':', e);
+                }
+            }
+        }
         document.getElementById('totalUsers').textContent=total;
         document.getElementById('activeUsers').textContent=active;
         document.getElementById('disabledUsers').textContent=disabled;
